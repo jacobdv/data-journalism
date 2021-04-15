@@ -18,7 +18,7 @@ const chartGroup = svg
 
 
 // Creates axis.
-let chosenXAxis = 'age';
+let chosenXAxis = 'smokes';
 
 function xScale(smokerData, chosenXAxis) {
     const xLinearScale = d3
@@ -49,10 +49,10 @@ function renderCircles(circlesGroup, newXScale, chosenXAxis) {
 
 function updateToolTip(chosenXAxis, circlesGroup){ 
     let label;
-    if (chosenXAxis === 'age') {
-        label = 'Age';
+    if (chosenXAxis === 'smokes') {
+        label = 'Smokes';
     } else {
-        label = 'Other';
+        label = 'Obesity';
     }
 
     const toolTip = d3
@@ -138,5 +138,72 @@ d3.csv('assets/data/data.csv').then(stateData => {
         .enter()
         .append('circle')
         .attr('cx', d => xLinearScale(d[chosenXAxis]))
+        .attr('cy', d => yLinearScale(d.smokes))
+        .attr('r', 20)
+        .attr('fill', 'pink')
+        .attr('opacity', 0.5)
+        .attr('stroke', 'black');
+
+    const labelsGroup = chartGroup
+        .append('g')
+        .attr('transform', `translate(${width / 2}, ${height + 20})`);
+
+    const smokesLabel = labelsGroup
+        .append('text')
+        .attr('x', 0)
+        .attr('y', 20)
+        .attr('values', 'smokes')
+        .classed('active', true)
+        .text('Filler Text 1');
+
+    const obesityLabel = labelsGroup
+        .append('text')
+        .attr('x', 0)
+        .attr('y', 40)
+        .attr('values', 'obesity')
+        .classed('inactive', true)
+        .text('Filler Text 2');
+
+    chartGroup
+        .append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('y', 0 - margin.left)
+        .attr('x', 0 - (height / 2))
+        .attr('dy', '1em')
+        .classed('axis-text', true)
+        .text('Filler Text 3');
+
+    circlesGroup = updateToolTip(chosenXAxis, circlesGroup);
+
+    labelsGroup.selectAll('text')
+        .on('click', function() {
+            const values = d3
+                .select(this)
+                .attr('value');
+            if (value !== chosenXAxis) {
+                chosenXAxis = value;
+                xLinearScale = xScale(stateData, chosenXAxis);
+                xAxis = renderAxes(xLinearScale, xAxis);
+                circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis);
+                circlesGroup = updateToolTip(chosenXAxis, circlesGroup);
+
+                if (chosenXAxis === 'smokes') {
+                    smokesLabel
+                        .classed('active', true)
+                        .classed('inactive', false);
+                    obesityLabel
+                        .classed('active', false)
+                        .classed('inactive', true);
+                } else {
+                    smokesLabel
+                        .classed('active', false)
+                        .classed('inactive', true);
+                    obesityLabel
+                        .classed('active', true)
+                        .classed('inactive', false);
+                }
+            }
+        })
+
 
 }).catch(error => console.log(error));
