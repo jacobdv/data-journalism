@@ -20,7 +20,7 @@ const chartGroup = svg
 // Creates axis.
 let chosenXAxis = 'smokes';
 
-function xScale(smokerData, chosenXAxis) {
+function xScale(stateData, chosenXAxis) {
     const xLinearScale = d3
         .scaleLinear()
         .domain([d3.min(stateData, d => d[chosenXAxis]) * 0.8,
