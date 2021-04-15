@@ -15,11 +15,10 @@ const chartGroup = svg
     .append('g')
     .attr('transfrom',`translate(${margin.left}, ${margin.top})`);
 
-
-
-// Creates axis.
+// Creates initial axis.
 let chosenXAxis = 'smokes';
 
+// Creates boundary for x axis based on chosen label.
 function xScale(stateData, chosenXAxis) {
     const xLinearScale = d3
         .scaleLinear()
@@ -39,6 +38,7 @@ function renderAxes(newXScale, xAxis) {
     return xAxis;
 };
 
+// Actually draws/redraws circles with some transition delay.
 function renderCircles(circlesGroup, newXScale, chosenXAxis) {
     circlesGroup
         .transition()
@@ -58,8 +58,8 @@ function updateToolTip(chosenXAxis, circlesGroup){
     const toolTip = d3
         .tip()
         .attr('class','tooltip')
-        .offset([80, -60])
-        .html(d => `${d.state}<br>${label} ${d[chosenXAxis]}`);
+        .offset([80,-60])
+        .html(d => `${d.abbr}<br>${label} ${d[chosenXAxis]}`);
 
     circlesGroup.call(toolTip);
     circlesGroup
@@ -73,15 +73,9 @@ function updateToolTip(chosenXAxis, circlesGroup){
     return circlesGroup;
 };
 
-
-
 // This part actually uses the data csv file.
 d3.csv('assets/data/data.csv').then(stateData => {
-
-    // Retyping data and creating object for used data.
-    smokerData = [];
     stateData.forEach(data => {
-    
         // Retyping data.
         data.id = +data.id;
         data.poverty = +data.poverty;
@@ -99,26 +93,13 @@ d3.csv('assets/data/data.csv').then(stateData => {
         data.smokes = +data.smokes;
         data.smokesLow = +data.smokesLow;
         data.smokesHigh = +data.smokesHigh;
-    
-        // Creating object for used data.
-        smokerData.push({
-            'state': data.abbr,
-            'age': data.age,
-            'smokes': data.smokes
-            // 'smokesLow': data.smokesLow,
-            // 'smokesHigh': data.smokesHigh
-        });
     });
     
-    
-
-    /////////////////////
-
     let xLinearScale = xScale(stateData, chosenXAxis);
 
     const yLinearScale = d3
         .scaleLinear()
-        .domain([0, d3.max(stateData, d => d.smokes)])
+        .domain([0, d3.max(stateData, d => d.age) * 1.2])
         .range([height, 0]);
 
     const bottomAxis = d3.axisBottom(xLinearScale);
@@ -126,49 +107,55 @@ d3.csv('assets/data/data.csv').then(stateData => {
 
     let xAxis = chartGroup
         .append('g')
-        .call(leftAxis);
+        .classed('x-axis', true)
+        .attr('transform', `translate(0, ${height})`)
+        .call(bottomAxis);
 
     chartGroup
         .append('g')
         .call(leftAxis);
 
+    // Draws circles.
     let circlesGroup = chartGroup
         .selectAll('circle')
         .data(stateData)
         .enter()
         .append('circle')
         .attr('cx', d => xLinearScale(d[chosenXAxis]))
-        .attr('cy', d => yLinearScale(d.smokes))
+        .attr('cy', d => yLinearScale(d.age))
         .attr('r', 20)
-        .attr('fill', 'pink')
-        .attr('opacity', 0.5)
+        .attr('fill', 'lightblue')
+        .attr('opacity', 0.95)
         .attr('stroke', 'black');
 
     const labelsGroup = chartGroup
         .append('g')
         .attr('transform', `translate(${width / 2}, ${height + 20})`);
 
+    // Adds label for smoking.
     const smokesLabel = labelsGroup
         .append('text')
         .attr('x', 0)
         .attr('y', 20)
-        .attr('values', 'smokes')
+        .attr('value', 'smokes')
         .classed('active', true)
-        .text('Filler Text 1');
+        .text('Smokes %');
 
+    // Adds label for obesity.
     const obesityLabel = labelsGroup
         .append('text')
         .attr('x', 0)
         .attr('y', 40)
-        .attr('values', 'obesity')
+        .attr('value', 'obesity')
         .classed('inactive', true)
-        .text('Filler Text 2');
+        .text('Obesity %');
 
+    // SHOULD BE AGE TEXT.
     chartGroup
         .append('text')
         .attr('transform', 'rotate(-90)')
-        .attr('y', 0 - margin.left)
-        .attr('x', 0 - (height / 2))
+        .attr('x', 0)
+        .attr('y', 0)
         .attr('dy', '1em')
         .classed('axis-text', true)
         .text('Filler Text 3');
@@ -177,7 +164,7 @@ d3.csv('assets/data/data.csv').then(stateData => {
 
     labelsGroup.selectAll('text')
         .on('click', function() {
-            const values = d3
+            const value = d3
                 .select(this)
                 .attr('value');
             if (value !== chosenXAxis) {
@@ -206,4 +193,4 @@ d3.csv('assets/data/data.csv').then(stateData => {
         })
 
 
-}).catch(error => console.log(error));
+});
