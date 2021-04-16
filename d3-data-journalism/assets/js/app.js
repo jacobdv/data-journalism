@@ -44,18 +44,21 @@ function setupY(stateData, yVariable) {
     return yScale;
 };
 // Draws circles.
-function createCircles(circlesGroup, xVariable, yVariable) {
+function createCircles(circlesGroup, xVariable, yVariable, stateData) {
     circlesGroup
-        .transition()
-        .duration(1000)
-        .attr('cx', d => setupX(d[xVariable]))
-        .attr('cy', d => setupY(d[yVariable]));
+        .attr('cx', d => setupX(stateData, xVariable))
+        .attr('cy', d => setupY(stateData, yVariable));
+    // circlesGroup
+    //     .transition()
+    //     .duration(1000)
+    //     .attr('cx', d => setupX(d[xVariable]))
+    //     .attr('cy', d => setupY(d[yVariable]));
     return circlesGroup;
 };
 // Draws x axis.
-function createX(xScale, xAxis) {
+function createX(setupX, xAxis) {
     const bottomAxis = d3  
-        .axisBottom(xScale);
+        .axisBottom(setupX);
     xAxis
         .transition()
         .duration(1000)
@@ -63,9 +66,9 @@ function createX(xScale, xAxis) {
     return xAxis;
 };
 // Draws y axis.
-function createY(yScale, yAxis) {
+function createY(setupY, yAxis) {
     const leftAxis = d3
-        .axisLeft(yScale);
+        .axisLeft(setupY);
     yAxis
         .transition()
         .duration(1000)
@@ -185,7 +188,7 @@ Set up for updating variables on click.
                 xVariable = xSelection;
                 xScale = setupX(stateData, xVariable);
                 xAxis = createX(xScale, xAxis);
-                circlesGroup = createCircles(circlesGroup, xScale, xVariable);
+                circlesGroup = createCircles(circlesGroup, xVariable, yVariable);
                 if (xVariable === 'age') {
                     xAgeLabel
                         .classed('active', true)
@@ -214,7 +217,7 @@ Set up for updating variables on click.
                 yVariable = ySelection;
                 yScale = setupY(stateData, yVariable);
                 yAxis = createY(yScale, yAxis);
-                circlesGroup = createCircles(circlesGroup, yScale, yVariable);
+                circlesGroup = createCircles(circlesGroup, xVariable, yVariable);
                 if (yVariable === 'age') {
                     yAgeLabel
                         .classed('active', true)
