@@ -44,18 +44,18 @@ function setupY(stateData, yVariable) {
     return yScale;
 };
 // Draws circles.
-function createCircles(circlesGroup, xVariable) {
+function createCircles(circlesGroup, xVariable, yVariable) {
     circlesGroup
         .transition()
         .duration(1000)
-        .attr('cx', d => newSetupX(d[xVariable]))
-        .attr('cy', d => newSetupY(d[yVariable]));
+        .attr('cx', d => setupX(d[xVariable]))
+        .attr('cy', d => setupY(d[yVariable]));
     return circlesGroup;
 };
 // Draws x axis.
-function createX(newSetupX, xAxis) {
+function createX(xScale, xAxis) {
     const bottomAxis = d3  
-        .axisBottom(newSetupX);
+        .axisBottom(xScale);
     xAxis
         .transition()
         .duration(1000)
@@ -63,9 +63,9 @@ function createX(newSetupX, xAxis) {
     return xAxis;
 };
 // Draws y axis.
-function createY(newSetupY, yAxis) {
+function createY(yScale, yAxis) {
     const leftAxis = d3
-        .axisLeft(newSetupY);
+        .axisLeft(yScale);
     yAxis
         .transition()
         .duration(1000)
@@ -93,25 +93,25 @@ d3.csv('assets/data/data.csv').then(stateData => {
     // Function calls.
     // Creating x scale and x axis on the chart.
     let xScale = setupX(stateData, xVariable);
-    const xAxis = d3
+    const bottomAxis = d3
         .axisBottom(xScale);
-    chartGroup
+    let xAxis = chartGroup
         .append('g')
         .classed('x-axis', true)
         .attr('transform', `translate(0, ${chartH})`)
-        .call(xAxis);
+        .call(bottomAxis);
 
     // Creaeting y scale and y axis on the chart.
     let yScale = setupY(stateData, yVariable);
-    const yAxis = d3
+    const leftAxis = d3
         .axisLeft(yScale);
-    chartGroup
+    let yAxis = chartGroup
         .append('g')
         .classed('y-axis', true)
-        .call(yAxis);
+        .call(leftAxis);
 
     // Making the circles.
-    const circlesGroup = chartGroup
+    let circlesGroup = chartGroup
         .selectAll('circle')
         .data(stateData)
         .join('circle')
@@ -146,12 +146,12 @@ d3.csv('assets/data/data.csv').then(stateData => {
     // Y Axis
     const yGroup = chartGroup
         .append('g')
-        .attr('transform', 'rotate(-90)')
+        .attr("transform", `translate(${chartW / 2}, ${chartH + 20})`)
         .attr('x', (chartH / 2))
         .attr('y', 0 - ((chartW / 2) + 50))
         .attr('dy', '1em')
         .attr('class', 'axisText');
-    const yAgeLabel = xGroup 
+    const yAgeLabel = yGroup 
         .append('text')
         .attr('transform', 'rotate(-90)')
         .attr('x', (chartH / 2))
@@ -159,7 +159,7 @@ d3.csv('assets/data/data.csv').then(stateData => {
         .attr('value', 'age')
         .classed('inactive', true)
         .text('Average Age');
-    const yIncomeLabel = xGroup 
+    const yIncomeLabel = yGroup 
         .append('text')
         .attr('transform', 'rotate(-90)')
         .attr('x', (chartH / 2))
@@ -175,8 +175,63 @@ d3.csv('assets/data/data.csv').then(stateData => {
 /*
 Set up for updating variables on click.
 */
+    xGroup
+        .selectAll('text')
+        .on('click', function() {
+            const xSelection = d3
+                .select(this)
+                .attr('value');
+            if (xSelection !== xVariable) {
+                xVariable = xSelection;
+                xScale = setupX(stateData, xVariable);
+                xAxis = createX(xScale, xAxis);
+                circlesGroup = createCircles(circlesGroup, xScale, xVariable);
+                if (xVariable === 'age') {
+                    xAgeLabel
+                        .classed('active', true)
+                        .classed('inactive', false);
+                    xIncomeLabel
+                        .classed('active', false)
+                        .classed('inactive', true);
+                } else if (xVariable === 'income') {
+                    xAgeLabel
+                        .classed('active', false)
+                        .classed('inactive', true);
+                    xIncomeLabel
+                        .classed('active', true)
+                        .classed('inactive', false);
+                }
+            }
+        })
 
-    
+    yGroup
+        .selectAll('text')
+        .on('click', function() {
+            const ySelection = d3
+                .select(this)
+                .attr('value');
+            if (ySelection !== yVariable) {
+                yVariable = ySelection;
+                yScale = setupY(stateData, yVariable);
+                yAxis = createY(yScale, yAxis);
+                circlesGroup = createCircles(circlesGroup, yScale, yVariable);
+                if (yVariable === 'age') {
+                    yAgeLabel
+                        .classed('active', true)
+                        .classed('inactive', false);
+                    yIncomeLabel
+                        .classed('active', false)
+                        .classed('inactive', true);
+                } else if (yVariable === 'income') {
+                    yAgeLabel
+                        .classed('active', false)
+                        .classed('inactive', true);
+                    yIncomeLabel
+                        .classed('active', true)
+                        .classed('inactive', false);
+                }
+            }
+        })
 
     // Labels for circles.
     // stateData.forEach(d => {
@@ -187,24 +242,6 @@ Set up for updating variables on click.
     //         .attr('font-size', '15px')
     //         .text(d.abbr);
     // }); 
-
-    // Event listener for label selection changes.
-
-
-    // Listener for y variable selection changes.
-    // yLabel
-    //     .selectAll('text')
-    //     .on('click', function() {
-    //         const ySelection = d3
-    //             .select(this)
-    //             .attr('value');
-            
-    //         // Sets the y variable to the selected value.    
-    //         if (ySelection !== yVariable) {
-    //             yVariable = ySelection;
-    //         } 
-    //     })
-
 
 }).catch(error => console.log(error));
 
