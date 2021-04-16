@@ -131,7 +131,7 @@ d3.csv("assets/data/data.csv").then(data => {
     .attr("cx", d => xLinearScale(d[chosenXAxis]))
     .attr("cy", d => yLinearScale(d.age))
     .attr("r", 20)
-    .attr("fill", "blue")
+    .attr("fill", "lightblue")
     .attr("opacity", 0.95)
     .attr("stroke", "black");
 
@@ -160,6 +160,7 @@ d3.csv("assets/data/data.csv").then(data => {
     .attr("x", 0 - (height / 2))
     .attr("dy", "1em")
     .classed("axis-text", true)
+    .classed("active", true)
     .text("Age");
 
   // updateToolTip function above csv import
