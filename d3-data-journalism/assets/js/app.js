@@ -133,68 +133,63 @@ d3.csv('assets/data/data.csv').then(stateData => {
         .attr('x', 0)
         .attr('y', 20)
         .attr('value', 'age')
-        .classed('active', false)
+        .classed('active', true)
         .text('Average Age');
     const xIncomeLabel = xGroup 
         .append('text')
         .attr('x', 0)
         .attr('y', 40)
         .attr('value', 'income')
-        .classed('active', false)
+        .classed('inactive', true)
         .text('Median Income');
     
     // Y Axis
     const yGroup = chartGroup
         .append('g')
         .attr('transform', 'rotate(-90)')
-        .attr('x', 0 - (svgH / 2))
-        .attr('y', 0 - (margin.left - 30))
+        .attr('x', (chartH / 2))
+        .attr('y', 0 - ((chartW / 2) + 50))
         .attr('dy', '1em')
         .attr('class', 'axisText');
     const yAgeLabel = xGroup 
         .append('text')
         .attr('transform', 'rotate(-90)')
-        .attr('x', 0 - (svgH / 2))
-        .attr('y', 0 - (margin.left + 30))
+        .attr('x', (chartH / 2))
+        .attr('y', 0 - ((chartW / 2) + 50))
         .attr('value', 'age')
-        .classed('active', false)
+        .classed('inactive', true)
         .text('Average Age');
     const yIncomeLabel = xGroup 
         .append('text')
         .attr('transform', 'rotate(-90)')
-        .attr('x', 0 - (svgH / 2))
-        .attr('y', 0 - (margin.left - 50))
+        .attr('x', (chartH / 2))
+        .attr('y', 0 - ((chartW / 2) + 70))
         .attr('value', 'income')
-        .classed('active', false)
+        .classed('active', true)
         .text('Median Income');
 
+
 //////////////////////////////////////////////////
+
+
 /*
 Set up for updating variables on click.
 */
 
+    
 
     // Labels for circles.
-    stateData.forEach(d => {
-        chartGroup
-            .append('text')
-            .attr('x', (xScale(d[xVariable])) - (12))
-            .attr('y', (yScale(d[yVariable])) + (3))
-            .attr('font-size', '15px')
-            .text(d.abbr);
-    }); 
+    // stateData.forEach(d => {
+    //     chartGroup
+    //         .append('text')
+    //         .attr('x', (xScale(d[xVariable])) - (12))
+    //         .attr('y', (yScale(d[yVariable])) + (3))
+    //         .attr('font-size', '15px')
+    //         .text(d.abbr);
+    // }); 
 
     // Event listener for label selection changes.
 
-    // Labels for axes.
-    // let yLabel = chartGroup
-    //     .append('text')
-    //     .attr('transform', 'rotate(-90)')
-    //     .attr('x', 0 - (svgH / 2))
-    //     .attr('y', 0 - (margin.left - 30))
-    //     .attr('dy', '1em')
-    //     .attr('class', 'axisText')
-    //     .text(`${yVariable}`);
 
     // Listener for y variable selection changes.
     // yLabel
@@ -210,11 +205,6 @@ Set up for updating variables on click.
     //         } 
     //     })
 
-    // let xLabel = chartGroup
-    //     .append('text')
-    //     .attr('transform', `translate(${chartW / 2}, ${chartH + margin.top + 30})`)
-    //     .attr('class', 'axisText')
-    //     .text(`${xVariable}`);
 
 }).catch(error => console.log(error));
 
