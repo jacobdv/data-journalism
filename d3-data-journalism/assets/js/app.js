@@ -28,37 +28,38 @@ const chartGroup = svg
 Functions for drawing the chart and updating it.
 */
 // Sets up x axis.
-function setupX(stateData, xVariable) {
-    const xScale = d3
+function xScale(data, xVariable) {
+    const xLinearScale = d3
         .scaleLinear()
         .range([0, chartW])
-        .domain([0, (d3.max(stateData, d => d[xVariable])) * 1.2]);
-    return xScale;
+        .domain([d3.min(data, d => d[xVariable]) * 0.8,
+            (d3.max(data, d => d[xVariable])) * 1.2]);
+    return xLinearScale;
 };
 // Sets up y axis.
-function setupY(stateData, yVariable) {
-    const yScale = d3
+function yScale(data, yVariable) {
+    const yLinearScale = d3
         .scaleLinear()
         .range([chartH, 0])
-        .domain([0, (d3.max(stateData, d => d[yVariable])) * 1.2]);
-    return yScale;
+        .domain([d3.min(data, d => d[yVariable]) * 0.8,
+            (d3.max(data, d => d[yVariable])) * 1.2]);
+    return yLinearScale;
 };
+
 // Draws circles.
-function createCircles(circlesGroup, xVariable, yVariable, stateData) {
+function renderCircles(circlesGroup, newXScale, newYScale, xVariable, yVariable) {
     circlesGroup
-        .attr('cx', d => setupX(stateData, xVariable))
-        .attr('cy', d => setupY(stateData, yVariable));
-    // circlesGroup
-    //     .transition()
-    //     .duration(1000)
-    //     .attr('cx', d => setupX(d[xVariable]))
-    //     .attr('cy', d => setupY(d[yVariable]));
+        .transition()
+        .duration(1000)
+        .attr('cx', d => newXScale(d[xVariable]))
+        .attr('cy', d => newYScale(d[yVariable]));
+    console.log(circlesGroup)
     return circlesGroup;
 };
 // Draws x axis.
-function createX(setupX, xAxis) {
+function renderX(newXScale, xAxis) {
     const bottomAxis = d3  
-        .axisBottom(setupX);
+        .axisBottom(newXScale);
     xAxis
         .transition()
         .duration(1000)
@@ -66,9 +67,9 @@ function createX(setupX, xAxis) {
     return xAxis;
 };
 // Draws y axis.
-function createY(setupY, yAxis) {
+function renderY(newYScale, yAxis) {
     const leftAxis = d3
-        .axisLeft(setupY);
+        .axisLeft(newYScale);
     yAxis
         .transition()
         .duration(1000)
@@ -83,10 +84,10 @@ function createY(setupY, yAxis) {
 Set up based on initial variables.
 */
 // Import data.
-d3.csv('assets/data/data.csv').then(stateData => {
+d3.csv('assets/data/data.csv').then(data => {
 
     // Retyping the data to be used.
-    stateData.forEach(data => {
+    data.forEach(data => {
         data.smokes = +data.smokes;
         data.income = +data.income;
         data.obesity = +data.obesity;
@@ -95,9 +96,9 @@ d3.csv('assets/data/data.csv').then(stateData => {
 
     // Function calls.
     // Creating x scale and x axis on the chart.
-    let xScale = setupX(stateData, xVariable);
+    let xLinearScale = xScale(data, xVariable);
     const bottomAxis = d3
-        .axisBottom(xScale);
+        .axisBottom(xLinearScale);
     let xAxis = chartGroup
         .append('g')
         .classed('x-axis', true)
@@ -105,9 +106,9 @@ d3.csv('assets/data/data.csv').then(stateData => {
         .call(bottomAxis);
 
     // Creaeting y scale and y axis on the chart.
-    let yScale = setupY(stateData, yVariable);
+    let yLinearScale = yScale(data, yVariable);
     const leftAxis = d3
-        .axisLeft(yScale);
+        .axisLeft(yLinearScale);
     let yAxis = chartGroup
         .append('g')
         .classed('y-axis', true)
@@ -116,16 +117,16 @@ d3.csv('assets/data/data.csv').then(stateData => {
     // Making the circles.
     let circlesGroup = chartGroup
         .selectAll('circle')
-        .data(stateData)
+        .data(data)
         .join('circle')
-        .attr('cx', d => xScale(d[xVariable]))
-        .attr('cy', d => yScale(d[yVariable]))
-        .attr('r', '15')
+        .attr('cx', d => xLinearScale(d[xVariable]))
+        .attr('cy', d => yLinearScale(d[yVariable]))
+        .attr('r', 15)
         .attr('fill', 'cornflowerblue')
         .attr('opacity', 0.95)
         .attr('stroke', 'black')
         .attr('stroke-width', 1);
-
+    console.log(circlesGroup)
     // Axes labels
     // X Axis
     const xGroup = chartGroup
@@ -149,24 +150,19 @@ d3.csv('assets/data/data.csv').then(stateData => {
     // Y Axis
     const yGroup = chartGroup
         .append('g')
-        .attr("transform", `translate(${chartW / 2}, ${chartH + 20})`)
-        .attr('x', (chartH / 2))
-        .attr('y', 0 - ((chartW / 2) + 50))
-        .attr('dy', '1em')
-        .attr('class', 'axisText');
     const yAgeLabel = yGroup 
         .append('text')
         .attr('transform', 'rotate(-90)')
-        .attr('x', (chartH / 2))
-        .attr('y', 0 - ((chartW / 2) + 50))
+        .attr('x', -(chartH/2))
+        .attr('y', -50)
         .attr('value', 'age')
         .classed('inactive', true)
         .text('Average Age');
     const yIncomeLabel = yGroup 
         .append('text')
         .attr('transform', 'rotate(-90)')
-        .attr('x', (chartH / 2))
-        .attr('y', 0 - ((chartW / 2) + 70))
+        .attr('x', -(chartH/2))
+        .attr('y', -70)
         .attr('value', 'income')
         .classed('active', true)
         .text('Median Income');
@@ -181,14 +177,14 @@ Set up for updating variables on click.
     xGroup
         .selectAll('text')
         .on('click', function() {
-            const xSelection = d3
+            const xValue = d3
                 .select(this)
                 .attr('value');
-            if (xSelection !== xVariable) {
-                xVariable = xSelection;
-                xScale = setupX(stateData, xVariable);
-                xAxis = createX(xScale, xAxis);
-                circlesGroup = createCircles(circlesGroup, xVariable, yVariable);
+            if (xValue !== xVariable) {
+                xVariable = xValue;
+                xLinearScale = xScale(data, xVariable);
+                xAxis = renderX(xLinearScale, xAxis);
+                circlesGroup = renderCircles(circlesGroup, xLinearScale, yLinearScale, xVariable, yVariable);
                 if (xVariable === 'age') {
                     xAgeLabel
                         .classed('active', true)
@@ -210,14 +206,14 @@ Set up for updating variables on click.
     yGroup
         .selectAll('text')
         .on('click', function() {
-            const ySelection = d3
+            const yValue = d3
                 .select(this)
                 .attr('value');
-            if (ySelection !== yVariable) {
-                yVariable = ySelection;
-                yScale = setupY(stateData, yVariable);
-                yAxis = createY(yScale, yAxis);
-                circlesGroup = createCircles(circlesGroup, xVariable, yVariable);
+            if (yValue !== yVariable) {
+                yVariable = yValue;
+                yLinearScale = yScale(data, yVariable);
+                yAxis = renderY(yLinearScale, yAxis);
+                circlesGroup = renderCircles(circlesGroup, xLinearScale, yLinearScale, xVariable, yVariable);
                 if (yVariable === 'age') {
                     yAgeLabel
                         .classed('active', true)
@@ -237,7 +233,7 @@ Set up for updating variables on click.
         })
 
     // Labels for circles.
-    // stateData.forEach(d => {
+    // data.forEach(d => {
     //     chartGroup
     //         .append('text')
     //         .attr('x', (xScale(d[xVariable])) - (12))
