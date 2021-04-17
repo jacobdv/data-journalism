@@ -45,7 +45,6 @@ function yScale(data, yVariable) {
             (d3.max(data, d => d[yVariable])) * 1.2]);
     return yLinearScale;
 };
-
 // Draws circles.
 function renderCircles(circlesGroup, newXScale, newYScale, xVariable, yVariable) {
     circlesGroup
@@ -55,6 +54,16 @@ function renderCircles(circlesGroup, newXScale, newYScale, xVariable, yVariable)
         .attr('cy', d => newYScale(d[yVariable]));
     console.log(circlesGroup)
     return circlesGroup;
+};
+// Draws abbr labels.
+function renderAbbrs(abbrGroup, newXScale, newYScale, xVariable, yVariable) {
+    abbrGroup
+        .transition()
+        .duration(1000)
+        .attr('x', d => newXScale(d[xVariable]) - 12)
+        .attr('y', d => newYScale(d[yVariable]) + 5);
+    console.log(abbrGroup)
+    return abbrGroup;
 };
 // Draws x axis.
 function renderX(newXScale, xAxis) {
@@ -85,7 +94,6 @@ Set up based on initial variables.
 */
 // Import data.
 d3.csv('assets/data/data.csv').then(data => {
-
     // Retyping the data to be used.
     data.forEach(data => {
         data.smokes = +data.smokes;
@@ -93,7 +101,6 @@ d3.csv('assets/data/data.csv').then(data => {
         data.obesity = +data.obesity;
         data.age = +data.age;
     });
-
     // Function calls.
     // Creating x scale and x axis on the chart.
     let xLinearScale = xScale(data, xVariable);
@@ -104,8 +111,7 @@ d3.csv('assets/data/data.csv').then(data => {
         .classed('x-axis', true)
         .attr('transform', `translate(0, ${chartH})`)
         .call(bottomAxis);
-
-    // Creaeting y scale and y axis on the chart.
+    // Creating y scale and y axis on the chart.
     let yLinearScale = yScale(data, yVariable);
     const leftAxis = d3
         .axisLeft(yLinearScale);
@@ -113,7 +119,6 @@ d3.csv('assets/data/data.csv').then(data => {
         .append('g')
         .classed('y-axis', true)
         .call(leftAxis);
-
     // Making the circles.
     let circlesGroup = chartGroup
         .selectAll('circle')
@@ -126,7 +131,17 @@ d3.csv('assets/data/data.csv').then(data => {
         .attr('opacity', 0.95)
         .attr('stroke', 'black')
         .attr('stroke-width', 1);
-    console.log(circlesGroup)
+    // Labeling individual circles.
+    let abbrGroup = chartGroup
+        .selectAll('abbr')
+        .data(data)
+        .join('text')
+        .attr('x', d => xLinearScale(d[xVariable]) - 12)
+        .attr('y', d => yLinearScale(d[yVariable]) + 5)
+        .style('fill','white')
+        .attr('font-size', '18px')
+        .text(d => d.abbr);
+
     // Axes labels
     // X Axis
     const xGroup = chartGroup
@@ -146,7 +161,6 @@ d3.csv('assets/data/data.csv').then(data => {
         .attr('value', 'income')
         .classed('inactive', true)
         .text('Median Income');
-    
     // Y Axis
     const yGroup = chartGroup
         .append('g')
@@ -174,6 +188,7 @@ d3.csv('assets/data/data.csv').then(data => {
 /*
 Set up for updating variables on click.
 */
+    // Grouping for x labels.
     xGroup
         .selectAll('text')
         .on('click', function() {
@@ -185,6 +200,7 @@ Set up for updating variables on click.
                 xLinearScale = xScale(data, xVariable);
                 xAxis = renderX(xLinearScale, xAxis);
                 circlesGroup = renderCircles(circlesGroup, xLinearScale, yLinearScale, xVariable, yVariable);
+                abbrGroup = renderAbbrs(abbrGroup, xLinearScale, yLinearScale, xVariable, yVariable);
                 if (xVariable === 'age') {
                     xAgeLabel
                         .classed('active', true)
@@ -202,7 +218,7 @@ Set up for updating variables on click.
                 }
             }
         })
-
+    // Grouping for y labels.
     yGroup
         .selectAll('text')
         .on('click', function() {
@@ -214,6 +230,7 @@ Set up for updating variables on click.
                 yLinearScale = yScale(data, yVariable);
                 yAxis = renderY(yLinearScale, yAxis);
                 circlesGroup = renderCircles(circlesGroup, xLinearScale, yLinearScale, xVariable, yVariable);
+                abbrGroup = renderAbbrs(abbrGroup, xLinearScale, yLinearScale, xVariable, yVariable);
                 if (yVariable === 'age') {
                     yAgeLabel
                         .classed('active', true)
@@ -231,17 +248,6 @@ Set up for updating variables on click.
                 }
             }
         })
-
-    // Labels for circles.
-    // data.forEach(d => {
-    //     chartGroup
-    //         .append('text')
-    //         .attr('x', (xScale(d[xVariable])) - (12))
-    //         .attr('y', (yScale(d[yVariable])) + (3))
-    //         .attr('font-size', '15px')
-    //         .text(d.abbr);
-    // }); 
-
 }).catch(error => console.log(error));
 
 
